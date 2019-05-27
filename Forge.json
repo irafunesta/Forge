@@ -1,6 +1,7 @@
 {
     "package" : "tools.common.forge",
     "website" : "https://github.com/SchroedingerEntertainment/Forge",
+    "description" : "https://raw.githubusercontent.com/SchroedingerEntertainment/Forge/master/README.md",
     "disclaimer" : "https://raw.githubusercontent.com/SchroedingerEntertainment/License/master/EULA.md",
     "platform" : "All Platforms",
     "version" : "1.0.0",

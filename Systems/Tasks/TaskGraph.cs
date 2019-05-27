@@ -17,7 +17,7 @@ namespace SE.Forge.Systems
         const int TimerTickInterval = 200;
         private readonly static TaskGraph instance;
 
-        private static QueuedChannel<Task> dispatcher;
+        private static Channel<Task> dispatcher;
         private static QueueBuffer<Task> pendingTasks;
 
         private static int activeTasks = 0;
@@ -35,7 +35,7 @@ namespace SE.Forge.Systems
         static TaskGraph()
         {
             instance = new TaskGraph();
-            dispatcher = new QueuedChannel<Task>();
+            dispatcher = new Channel<Task>(new RoundRobinDispatcher());
             pendingTasks = new QueueBuffer<Task>(64);
             comparer = new TaskPinComparer();
         }

@@ -193,17 +193,32 @@ namespace SE.Forge.SharpAnalyzer
         const string InheritanceExpression = @"[\:|\,|\(]\s+\b([a-zA-Z_][.a-zA-Z0-9_]*)\s";
         const string TypeDeclarationExpression = @"\b(?:\binterface\b|\bclass\b|\bstruct\b|\benum\b)\s+([a-zA-Z_][a-zA-Z0-9_]*)";
 
-        private static Regex blockCommentRegex = new Regex(BlockCommentExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
-        private static Regex lineCommentRegex = new Regex(LineCommentExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
-        private static Regex stringRegex = new Regex(StringExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
-        private static Regex verbatimStringRegex = new Regex(VerbatimStringExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
-        private static Regex entryPointRegex = new Regex(EntryPointExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
-        private static Regex variableDelcarationRegex = new Regex(VariableDelcarationExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
-        private static Regex usingRegex = new Regex(UsingExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
-        private static Regex namespaceRegex = new Regex(NamespaceExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
-        private static Regex typeUsageRegex = new Regex(TypeUsageExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
-        private static Regex inheritanceRegex = new Regex(InheritanceExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
-        private static Regex typeDeclarationRegex = new Regex(TypeDeclarationExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
+        private static Regex blockCommentRegex;
+        private static Regex lineCommentRegex;
+        private static Regex stringRegex;
+        private static Regex verbatimStringRegex;
+        private static Regex entryPointRegex;
+        private static Regex variableDelcarationRegex;
+        private static Regex usingRegex;
+        private static Regex namespaceRegex;
+        private static Regex typeUsageRegex;
+        private static Regex inheritanceRegex;
+        private static Regex typeDeclarationRegex;
+
+        static CodeParser()
+        {
+            blockCommentRegex = new Regex(BlockCommentExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
+            lineCommentRegex = new Regex(LineCommentExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
+            stringRegex = new Regex(StringExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
+            verbatimStringRegex = new Regex(VerbatimStringExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
+            entryPointRegex = new Regex(EntryPointExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
+            variableDelcarationRegex = new Regex(VariableDelcarationExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
+            usingRegex = new Regex(UsingExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
+            namespaceRegex = new Regex(NamespaceExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
+            typeUsageRegex = new Regex(TypeUsageExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
+            inheritanceRegex = new Regex(InheritanceExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
+            typeDeclarationRegex = new Regex(TypeDeclarationExpression, RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.Compiled);
+        }
 
         public static string Prepare(string data)
         {
