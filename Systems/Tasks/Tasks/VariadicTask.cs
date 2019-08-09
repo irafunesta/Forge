@@ -14,6 +14,11 @@ namespace SE.Forge.Systems.Tasks
             get { return true; }
         }
 
+        public virtual bool ExclusiveUse
+        {
+            get { return false; }
+        }
+
         public override bool IsPending
         {
             get 

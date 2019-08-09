@@ -10,12 +10,14 @@ using SE.Code.Analytics;
 using SE.Forge.Systems;
 using SE.Parallel;
 using SE.Storage;
+using SE.Text;
 using SE.App;
 
 namespace SE.Forge.SharpAnalyzer
 {
     public class ProjectLookup : ProjectTask
     {
+        private const string ToolDisplayName = "C#";
         private const string AnalyticsNodeName = "C# Project '{0}'";
         public readonly static string[] Extensions = new string[]
             {
@@ -37,10 +39,25 @@ namespace SE.Forge.SharpAnalyzer
 
             try
             {
+                if (!(inputPins[0].Data as PathDescriptor).Exists())
+                {
+                    string name = (inputPins[0].Data as PathDescriptor).Name;
+                    ((Action)(() =>
+                    {
+                        Application.Error(SeverityFlags.None, "Directory '{0}' not found", name);
+
+                    })).Once(name.Fnv32());
+
+                    Cancel();
+                    return;
+                }
+
                 List<FileSystemDescriptor> files = Application.GetProjectFiles(inputPins[0].Data as PathDescriptor, Extensions);
                 if (files.Count > 0 && files.Where(x => (x as FileDescriptor).Extension == "cs").Count() != 0)
                 {
-                    outputPins[0].Data = CreateProject(null, files);
+                    Project project = CreateProject(null, files);
+                    Application.Log(SeverityFlags.Full, "Loaded {0} project {1}", ToolDisplayName, project.Name);
+                    outputPins[0].Data = project;
                 }
                 else Cancel();
             }

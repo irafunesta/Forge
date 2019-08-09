@@ -13,6 +13,8 @@ namespace SE.Forge.VisualStudio
 {
     public class VisualSharpProject : VisualStudioProject
     {
+        PathDescriptor propertiesPath;
+
         public override Guid ProjectTypeGuid
         {
             get { return SharpGuid.ToGuid(); }
@@ -123,7 +125,10 @@ namespace SE.Forge.VisualStudio
         {
             writer.WriteLine("  <ItemGroup>");
             foreach (FileDescriptor file in files)
-                writer.WriteLine("    <Compile Include=\"{0}\" />", file.GetRelativePath(location));
+                if (file.Extension != "resx")
+                {
+                    writer.WriteLine("    <Compile Include=\"{0}\" />", file.GetRelativePath(location));
+                }
             foreach(KeyValuePair<FileDescriptor, string> link in links)
             {
                 writer.WriteLine("    <Compile Include=\"{0}\">", link.Key.GetRelativePath(location));
@@ -132,11 +137,24 @@ namespace SE.Forge.VisualStudio
             }
             writer.WriteLine("  </ItemGroup>");
         }
+        protected void SetEmbeddedResources(StreamWriter writer)
+        {
+            writer.WriteLine("  <ItemGroup>");
+            foreach (FileDescriptor file in propertiesPath.GetFiles())
+                if(file.Extension != "cs")
+                {
+                    writer.WriteLine("    <EmbeddedResource Include=\"{0}\"/>", file.GetRelativePath(location));
+                }
+            writer.WriteLine("  </ItemGroup>");
+        }
 
         public override void CreateFile()
         {
             using (FileStream fs = Open(FileMode.Create, FileAccess.Write, FileShare.Read))
             {
+                if (propertiesPath == null)
+                    propertiesPath = new PathDescriptor(location, "Properties");
+
                 StreamWriter sw = new StreamWriter(fs);
                 sw.WriteLine("<Project ToolsVersion=\"{0}\" DefaultTargets=\"{1}\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">", VisualStudioUtils.GetToolsVersion(version), "Build");
 
@@ -144,6 +162,7 @@ namespace SE.Forge.VisualStudio
                 SetBuildTargets(sw);
                 SetReferences(sw);
                 SetSourceFiles(sw);
+                SetEmbeddedResources(sw);
 
                 sw.WriteLine("  <Import Project=\"$(MSBuildToolsPath)\\Microsoft.CSharp.targets\" />");
                 sw.WriteLine("</Project>");

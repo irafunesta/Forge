@@ -89,7 +89,10 @@ namespace SE.Forge.CppAnalyzer
 
                     lock (projects)
                         if (!projects.Contains(module))
+                        {
+                            Application.Log(SeverityFlags.Full, "Loaded {0} module {1}::{2}", ToolDisplayName, module.Name, module.Target.TechnicalName);
                             projects.Add(module);
+                        }
                 }
             });
             projects.ParallelFor((project) =>
@@ -101,10 +104,11 @@ namespace SE.Forge.CppAnalyzer
                     {
                         if (element.Tag == ReferenceStorageTag)
                         {
-                            projects.ParallelFor((reference) =>
+                            projects.Where(x => x.Target.Id == project.Target.Id).ParallelFor((reference) =>
                             {
                                 if (reference == element.Element as FileDescriptor)
                                 {
+                                    Application.Log(SeverityFlags.Full, "Cached {0} module {1}::{2}", ToolDisplayName, reference.Name, reference.Target.TechnicalName);
                                     lock (project)
                                         project.References.Add(reference);
                                 }

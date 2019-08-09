@@ -10,7 +10,9 @@ namespace SE.Forge.Systems.Tasks
     {
         bool Enabled { get; }
         TaskPin[] InputPins { get; }
-        
+
+        bool ExclusiveUse { get; }
+
         bool VariadicAccepts(TaskPin inputPin);
         Task CreateInstance();
     }

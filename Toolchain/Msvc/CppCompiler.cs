@@ -47,7 +47,7 @@ namespace SE.Forge.Msvc
                         definitions.Add("_WIN32", "1");
                         break;
                     case TargetArchitecture.x64:
-                        definitions.Add("_WIN32", "1");
+                        if(!definitions.ContainsKey("_WIN32")) definitions.Add("_WIN32", "1");
                         definitions.Add("_WIN64", "1");
                         break;
                 }

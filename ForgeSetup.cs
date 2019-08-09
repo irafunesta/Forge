@@ -65,6 +65,9 @@ namespace SE.Forge
                 else flag = SystemTags.ForgeSetup;
                 foreach (PathDescriptor path in Application.GetBuildPaths())
                     outputPins.Add(new FlaggedPin(this, path, flag));
+
+                if (outputPins.Count == 0)
+                    Application.Error(SeverityFlags.None, "Build paths not valid");
             }
         }
 

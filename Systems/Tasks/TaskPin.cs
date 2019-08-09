@@ -53,6 +53,13 @@ namespace SE.Forge.Systems
             internal set { parent = value; }
         }
 
+        protected bool locked;
+        public bool Locked
+        {
+            get { return locked; }
+            set { locked = value; }
+        }
+
         public TaskPin(Task owner, Type dataType, object data)
         {
             this.owner = owner;
@@ -68,7 +75,7 @@ namespace SE.Forge.Systems
 
         public virtual bool Accepts(TaskPin outputPin)
         {
-            return (outputPin.data != null && dataType.IsAssignableFrom(outputPin.data.GetType()));
+            return (dataType.IsAssignableFrom(outputPin.dataType));
         }
 
         public void Dispose()

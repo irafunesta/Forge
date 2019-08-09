@@ -14,7 +14,13 @@ namespace SE.Forge.Systems.Pins
         }
         public int GetHashCode(TaskPin obj)
         {
-            return obj.DataType.GetHashCode();
+            HashCombiner combiner = HashCombiner.Initialize();
+            combiner.Add(obj.DataType);
+
+            if (obj is FlaggedPin)
+                combiner.Add((obj as FlaggedPin).Flags);
+
+            return combiner.Value;
         }
     }
 }

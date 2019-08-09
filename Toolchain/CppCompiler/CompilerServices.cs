@@ -10,6 +10,7 @@ using SE.Threading;
 using SE.Parallel;
 using SE.Mixins;
 using SE.Config;
+using SE.App;
 
 namespace SE.Forge.CppCompiler
 {
@@ -99,6 +100,52 @@ namespace SE.Forge.CppCompiler
 
                 return targets;
             }
+        }
+
+        public static bool SetDefaultTarget()
+        {
+            bool isDefault = false;
+
+            PlatformFlags currentPlatform = Application.Platform;
+            foreach (ICppCompilerService service in CompilerServices.Services)
+            {
+                foreach (TargetPlatform platform in service.Platforms)
+                {
+                    string name = platform.Name.ToLowerInvariant();
+                    if ((currentPlatform & PlatformFlags.Windows).ToString().ToLowerInvariant() == name ||
+                        (currentPlatform & PlatformFlags.Linux).ToString().ToLowerInvariant() == name)
+                        foreach (TargetArchitecture architecture in service.Architectures)
+                        {
+                            switch (architecture)
+                            {
+                                case TargetArchitecture.x86:
+                                    if ((currentPlatform & PlatformFlags.x86) == PlatformFlags.x86)
+                                    {
+                                        targets = new BuildTarget[] { new BuildTarget(platform, architecture, BuildMode.Default) };
+                                    }
+                                    break;
+                                case TargetArchitecture.x64:
+                                    if ((currentPlatform & PlatformFlags.x64) == PlatformFlags.x64)
+                                    {
+                                        targets = new BuildTarget[] { new BuildTarget(platform, architecture, BuildMode.Default) };
+                                    }
+                                    break;
+                            }
+
+                            isDefault = targets.Length != 0;
+                            if (isDefault)
+                                break;
+                        }
+
+                    if (isDefault)
+                        break;
+                }
+
+                if (isDefault)
+                    break;
+            }
+
+            return isDefault;
         }
     }
 }

@@ -24,6 +24,12 @@ namespace SE.Forge.SharpCompiler
         {
             get { return enabled; }
         }
+
+        public bool ExclusiveUse
+        {
+            get { return false; }
+        }
+
         public bool Display
         {
             get { return true; }
@@ -113,6 +119,7 @@ namespace SE.Forge.SharpCompiler
 
             try
             {
+                Application.Log(SeverityFlags.Minimal, "Compiling {0} project {1}", ToolDisplayName, project.Name);
                 compiler.Execute();
             }
             finally

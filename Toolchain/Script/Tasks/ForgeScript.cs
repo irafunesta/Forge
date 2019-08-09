@@ -20,6 +20,11 @@ namespace SE.Forge.Script
             get { return true; }
         }
 
+        public bool ExclusiveUse
+        {
+            get { return false; }
+        }
+
         TaskPin[] inputPins;
         public override TaskPin[] InputPins
         {

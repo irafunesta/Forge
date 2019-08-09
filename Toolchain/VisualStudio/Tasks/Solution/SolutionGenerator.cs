@@ -73,6 +73,8 @@ namespace SE.Forge.VisualStudio
             if(hasModules)
                 solution.Content.Add(modulesDir);
 
+            Application.Log(SeverityFlags.Minimal, "Creating {0} solution {1}", version.Flag.ToString(), solution.File.FullName);
+
             solution.Projects.AddRange(projects);
             solution.CreateFile();
         }

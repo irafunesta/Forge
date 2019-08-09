@@ -112,6 +112,40 @@ namespace SE.Forge.Systems
             this.files = new ReferenceGraph();
             this.references = new List<Project>();
             this.externals = new List<FileDescriptor>();
+            this.target = BuildTarget.Default;
+        }
+
+        public static bool operator ==(Project left, Project right)
+        {
+            bool targetMatch; if (left as object != null && right as object != null)
+                targetMatch = left.target.Id == right.target.Id;
+            else
+                targetMatch = false;
+
+            return (targetMatch && (left as FileDescriptor) == (right as FileDescriptor));
+        }
+        public static bool operator !=(Project left, Project right)
+        {
+            bool targetMatch; if (left as object != null && right as object != null)
+                targetMatch = left.target.Id == right.target.Id;
+            else
+                targetMatch = false;
+
+            return (!targetMatch || (left as FileDescriptor) != (right as FileDescriptor));
+        }
+
+        public override bool Equals(object obj)
+        {
+            return (this == obj as Project);
+        }
+
+        public override int GetHashCode()
+        {
+            HashCombiner hash = HashCombiner.Initialize();
+            hash.Add(base.GetHashCode());
+            hash.Add(target);
+
+            return hash.Value; 
         }
     }
 }

@@ -17,6 +17,11 @@ namespace SE.Forge.Systems
             get { return true; }
         }
 
+        public bool ExclusiveUse
+        {
+            get { return false; }
+        }
+
         public abstract string[] FileExtensions
         {
             get;

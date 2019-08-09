@@ -12,17 +12,14 @@ namespace SE.Forge.Systems
 {
     public partial class TaskGraph
     {
-        private const int PermutationLimit = 6;
-
         private static TaskPinComparer comparer;
 
         void GenerateInputTasks(List<Task> parentTasks)
         {
             List<Task> tasks = new List<Task>();
-            if (parentTasks.Count < PermutationLimit)
             {
-                ICollection<ICollection<Task>> tuple = parentTasks.ParallelGetPermutations();
-                tuple.ParallelFor((set) =>
+                ICollection<ICollection<Task>> tuple = parentTasks.ParallelGetCombinations(parentTasks.Count, 2);
+                tuple.Reverse().ParallelFor((set) =>
                 {
                     TaskPin[] outPins = set.SelectMany(x => x.OutputPins).ToArray();
                     if (outPins.Length <= 1)
@@ -36,8 +33,17 @@ namespace SE.Forge.Systems
                             Dictionary<TaskPin, TaskPin> inPins = result.InputPins.ToDictionary<TaskPin, TaskPin>(x => x, comparer);
                             foreach (TaskPin outPin in outPins)
                             {
-                                inPins[outPin].Parent = outPin;
-                                inPins.Remove(outPin);
+                                TaskPin inPin; if (inPins.TryGetValue(outPin, out inPin))
+                                {
+                                    lock (outPin)
+                                    {
+                                        if (outPin.Locked) return;
+                                        else if (prototype.ExclusiveUse)
+                                            outPin.Locked = true;
+                                    }
+                                    inPin.Parent = outPin;
+                                    inPins.Remove(outPin);
+                                }
                             }
                             lock (tasks)
                             {
@@ -55,8 +61,9 @@ namespace SE.Forge.Systems
                 {
                     List<TaskPin> pins = new List<TaskPin>();
                     foreach (TaskPin outPin in outPins)
-                        if (prototype.VariadicAccepts(outPin))
-                            pins.Add(outPin);
+                        if (!outPin.Locked)
+                            if (prototype.VariadicAccepts(outPin))
+                                pins.Add(outPin);
 
                     if (pins.Count > 0)
                     {
@@ -76,16 +83,17 @@ namespace SE.Forge.Systems
             parentTasks.ParallelFor((task) =>
             {
                 foreach (TaskPin outPin in task.OutputPins)
-                    foreach (ITaskPrototype prototype in TaskPrototypes.Get(1))
-                        if (prototype.InputPins[0].Accepts(outPin))
-                        {
-                            Task result = prototype.CreateInstance();
-                            result.InputPins[0].Parent = outPin;
+                    if (!outPin.Locked)
+                        foreach (ITaskPrototype prototype in TaskPrototypes.Get(1))
+                            if (prototype.InputPins[0].Accepts(outPin))
+                            {
+                                Task result = prototype.CreateInstance();
+                                result.InputPins[0].Parent = outPin;
 
-                            AddChild(task, result);
-                            lock(tasks)
-                                tasks.Add(result);
-                        }
+                                AddChild(task, result);
+                                lock (tasks)
+                                    tasks.Add(result);
+                            }
             });
 
             if (tasks.Count > 0)

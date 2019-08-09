@@ -65,7 +65,7 @@ namespace SE.Forge.CppAnalyzer
         public ProjectLookup()
             : base(SystemTags.CppSetup)
         {
-            outputPins = new TaskPin[CompilerServices.Targets.Length];
+            outputPins = new TaskPin[Math.Max(CompilerServices.Targets.Length, 1)];
             for (int i = 0; i < outputPins.Length; i++)
                 outputPins[i] = new FlaggedPin(this, typeof(Project), SystemTags.CppSetup);
         }
@@ -76,6 +76,24 @@ namespace SE.Forge.CppAnalyzer
 
             try
             {
+                if (!(inputPins[0].Data as PathDescriptor).Exists())
+                {
+                    string name = (inputPins[0].Data as PathDescriptor).Name;
+                    ((Action)(() =>
+                    {
+                        Application.Error(SeverityFlags.None, "Directory '{0}' not found", name);
+
+                    })).Once(name.Fnv32());
+
+                    Cancel();
+                    return;
+                }
+
+                bool isDefault; if (CompilerServices.Targets.Length == 0 && CompilerServices.SetDefaultTarget())
+                    isDefault = true;
+                else
+                    isDefault = false;
+
                 for (int i = 0; i < CompilerServices.Targets.Length; i++)
                 {
                     Project project; if (!FromCache(CompilerServices.Targets[i], SystemTags.Cpp, inputPins[0].Data as PathDescriptor, out project))
@@ -83,11 +101,31 @@ namespace SE.Forge.CppAnalyzer
                         List<FileSystemDescriptor> files = Application.GetProjectFiles(inputPins[0].Data as PathDescriptor, Extensions);
                         if (files.Count > 0)
                         {
-                            outputPins[i].Data = CreateProject(project, files);
+                            if (isDefault)
+                                ((Action)(() =>
+                                {
+                                    Application.Warning(SeverityFlags.None, "C++ build target missing. Selecting {0} as target", CompilerServices.Targets[0].TechnicalName);
+
+                                })).Once(CompilerServices.Targets[0].TechnicalName.Fnv32());
+
+                            project = CreateProject(project, files);
+                            Application.Log(SeverityFlags.Full, "Loaded {0} project {1}::{2}", ToolDisplayName, project.Name, project.Target.TechnicalName);
+                            outputPins[i].Data = project;
                         }
                         else Cancel();
                     }
-                    else outputPins[i].Data = project;
+                    else
+                    {
+                        if (isDefault)
+                            ((Action)(() =>
+                            {
+                                Application.Warning(SeverityFlags.None, "C++ build target missing. Selecting {0} as target", CompilerServices.Targets[0].TechnicalName);
+
+                            })).Once(CompilerServices.Targets[0].TechnicalName.Fnv32());
+
+                        Application.Log(SeverityFlags.Full, "Cached {0} project {1}::{2}", ToolDisplayName, project.Name, project.Target.TechnicalName);
+                        outputPins[i].Data = project;
+                    }
                 }
             }
             catch (Exception e)

@@ -72,7 +72,10 @@ namespace SE.Forge.SharpAnalyzer
 
                     lock (projects)
                         if (!projects.Contains(module))
+                        {
+                            Application.Log(SeverityFlags.Full, "Loaded {0} module {1}", ToolDisplayName, module.Name);
                             projects.Add(module);
+                        }
                 }
             });
             projects.ParallelFor((project) =>

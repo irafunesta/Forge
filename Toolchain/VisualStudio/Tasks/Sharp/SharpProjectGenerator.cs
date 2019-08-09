@@ -46,6 +46,12 @@ namespace SE.Forge.VisualStudio
         {
             get;
         }
+
+        public bool ExclusiveUse
+        {
+            get { return false; }
+        }
+
         public override bool IsPending
         {
             get
@@ -122,6 +128,8 @@ namespace SE.Forge.VisualStudio
             foreach (FileDescriptor assembly in project.Externals)
                 if (!csproj.Dependencies.Contains(assembly))
                      csproj.Dependencies.Add(assembly);
+
+            Application.Log(SeverityFlags.Minimal, "Creating {0} project {1}", version.Flag.ToString(), csproj.FullName);
 
             SetBasicNamespace(project, csproj);
             csproj.CreateFile();

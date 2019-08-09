@@ -28,7 +28,7 @@ namespace SE.Forge.CppAnalyzer
             });
             project.Files.Nodes.ParallelFor((tmp) =>
             {
-                foreach (Project reference in projects)
+                foreach (Project reference in projects.Where(x => x.Target.Id == project.Target.Id))
                     if (reference != project)
                         if (reference.AssemblyType == OutputAssemblyType.Library || reference.AssemblyType == OutputAssemblyType.Static)
                             ConnectNodes(project, (tmp as CppReferenceNode), reference, true);
