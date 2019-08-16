@@ -7,6 +7,7 @@ using System.Threading;
 
 namespace SE.Forge.Systems
 {
+    [TaskPriority(TaskPriorityFlag.Primary)]
     public abstract class Task : IDisposable
     {
         int dispatchedFlag;

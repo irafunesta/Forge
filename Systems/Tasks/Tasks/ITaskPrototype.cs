@@ -10,6 +10,7 @@ namespace SE.Forge.Systems.Tasks
     {
         bool Enabled { get; }
         TaskPin[] InputPins { get; }
+        TaskPin[] OutputPins { get; }
 
         bool ExclusiveUse { get; }
 

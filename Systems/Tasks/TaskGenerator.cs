@@ -14,6 +14,25 @@ namespace SE.Forge.Systems
     {
         private static TaskPinComparer comparer;
 
+        void GetTasks(IEnumerable<ITaskPrototype> prototypes, IEnumerable<TaskPin> pins, List<Task> tasks)
+        {
+            foreach (ITaskPrototype proto in prototypes)
+                if (proto.InputPins.IsEqual(pins, comparer) && proto.OutputPins.IsEqual(pins, comparer))
+                {
+                    Task t = proto.CreateInstance();
+                    if (tasks.Count > 0)
+                    {
+                        Task parent = tasks[tasks.Count - 1];
+                        Dictionary<TaskPin, TaskPin> inPins = t.InputPins.ToDictionary<TaskPin, TaskPin>(x => x, comparer);
+                        foreach (TaskPin outPin in parent.OutputPins)
+                            inPins[outPin].Parent = outPin;
+
+                        AddChild(parent, t);
+                    }
+                    tasks.Add(t);
+                }
+        }
+
         void GenerateInputTasks(List<Task> parentTasks)
         {
             List<Task> tasks = new List<Task>();
@@ -25,39 +44,58 @@ namespace SE.Forge.Systems
                     if (outPins.Length <= 1)
                         return;
 
-                    foreach (ITaskPrototype prototype in TaskPrototypes.Get(outPins.Length))
+                    foreach (ITaskPrototype prototype in TaskPrototypes.Get(outPins.Length, TaskPriorityFlag.Primary))
                         if (prototype.InputPins.IsEqual(outPins, comparer))
                         {
                             Task result = prototype.CreateInstance();
 
                             Dictionary<TaskPin, TaskPin> inPins = result.InputPins.ToDictionary<TaskPin, TaskPin>(x => x, comparer);
+                            List<TaskPin> connectedPins = new List<TaskPin>(inPins.Count);
                             foreach (TaskPin outPin in outPins)
                             {
                                 TaskPin inPin; if (inPins.TryGetValue(outPin, out inPin))
                                 {
                                     lock (outPin)
                                     {
-                                        if (outPin.Locked) return;
-                                        else if (prototype.ExclusiveUse)
+                                        if (prototype.ExclusiveUse)
                                             outPin.Locked = true;
                                     }
-                                    inPin.Parent = outPin;
-                                    inPins.Remove(outPin);
+                                    connectedPins.Add(outPin);
                                 }
                             }
+
+                            List<Task> taskCache = new List<Task>(8);
+                            GetTasks(TaskPrototypes.Get(outPins.Length, TaskPriorityFlag.Before), connectedPins, taskCache);
+
+                            if (taskCache.Count > 0)
+                            {
+                                Task parent = tasks[tasks.Count - 1];
+                                inPins = result.InputPins.ToDictionary<TaskPin, TaskPin>(x => x, comparer);
+                                foreach (TaskPin outPin in parent.OutputPins)
+                                    inPins[outPin].Parent = outPin;
+
+                                AddChild(parent, result);
+                            }
+
+                            taskCache.Add(result);
+                            inPins = taskCache[0].InputPins.ToDictionary<TaskPin, TaskPin>(x => x, comparer);
+                            foreach (TaskPin outPin in connectedPins)
+                                inPins[outPin].Parent = outPin;
+
+                            GetTasks(TaskPrototypes.Get(outPins.Length, TaskPriorityFlag.After), result.OutputPins, taskCache);
                             lock (tasks)
                             {
                                 foreach (Task parent in set)
-                                    AddChild(parent, result);
+                                    AddChild(parent, taskCache[0]);
 
-                                tasks.Add(result);
+                                tasks.Add(taskCache[taskCache.Count - 1]);
                             }
                         }
                 });
             }
             {
                 TaskPin[] outPins = parentTasks.SelectMany(x => x.OutputPins).ToArray();
-                TaskPrototypes.Get(0).ParallelFor((prototype) =>
+                TaskPrototypes.Get(0, TaskPriorityFlag.Primary).ParallelFor((prototype) =>
                 {
                     List<TaskPin> pins = new List<TaskPin>();
                     foreach (TaskPin outPin in outPins)
@@ -84,16 +122,33 @@ namespace SE.Forge.Systems
             {
                 foreach (TaskPin outPin in task.OutputPins)
                     if (!outPin.Locked)
-                        foreach (ITaskPrototype prototype in TaskPrototypes.Get(1))
+                    {
+                        foreach (ITaskPrototype prototype in TaskPrototypes.Get(1, TaskPriorityFlag.Primary))
                             if (prototype.InputPins[0].Accepts(outPin))
                             {
+                                List<Task> taskCache = new List<Task>(8);
                                 Task result = prototype.CreateInstance();
-                                result.InputPins[0].Parent = outPin;
 
-                                AddChild(task, result);
+                                GetTasks(TaskPrototypes.Get(1, TaskPriorityFlag.Before), new TaskPin[] { outPin }, taskCache);
+
+                                if (taskCache.Count > 0)
+                                {
+                                    Task parent = tasks[tasks.Count - 1];
+                                    result.InputPins[0].Parent = parent.OutputPins[0];
+
+                                    AddChild(parent, result);
+                                }
+
+                                taskCache.Add(result);
+                                taskCache[0].InputPins[0].Parent = outPin;
+
+                                GetTasks(TaskPrototypes.Get(1, TaskPriorityFlag.After), new TaskPin[] { taskCache[0].OutputPins[0] }, taskCache);
+
+                                AddChild(task, taskCache[0]);
                                 lock (tasks)
-                                    tasks.Add(result);
+                                    tasks.Add(taskCache[taskCache.Count - 1]);
                             }
+                    }
             });
 
             if (tasks.Count > 0)

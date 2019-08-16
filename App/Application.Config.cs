@@ -55,7 +55,7 @@ namespace SE.App
             get { return ((flags & ApplicationFlags.ClearCache) == ApplicationFlags.ClearCache); }
         }
 
-        [AutoConfig(BuildParameter, Text = "Defines path to build directories and/or files", TypeConverter = typeof(StorageConverter), DefaultIndex = 0)]
+        [AutoConfig(BuildParameter, Text = "Defines a path to project directories and/or files", TypeConverter = typeof(StorageConverter), DefaultIndex = 0)]
         private static List<FileSystemDescriptor> buildEntries = new List<FileSystemDescriptor>();
         [AutoConfig(ProjectParameter, Text = "Defines path to a single project directory", TypeConverter = typeof(StorageConverter))]
         private static List<PathDescriptor> projectPaths = new List<PathDescriptor>();

@@ -75,6 +75,14 @@ namespace SE.Forge.Systems
                 pin.Dispose();
 
             outputPins = TaskPin.Empty;
+            {
+                Task c = child;
+                while (c != null)
+                {
+                    if(!(c is VariadicTask)) c.Dispose();
+                    c = c.Next;
+                }
+            }
             child = null;
         }
 
